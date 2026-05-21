@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "201708067435",
+    "firebase_url": "https://secondaplication-beec2-default-rtdb.firebaseio.com",
+    "project_id": "secondaplication-beec2",
+    "storage_bucket": "secondaplication-beec2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:201708067435:android:a0e9da87ade2f1cbfe2f2e",
+        "android_client_info": {
+          "package_name": "com.damay.secondaplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAvcDdxKzO5e0XSZumlrbPtcn76DpY3Uo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
