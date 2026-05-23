@@ -104,7 +104,7 @@ class TambahPegawaiActivity : AppCompatActivity() {
                     finish()
                 }
                 .addOnFailureListener {
-                    Toast.makeText(this, "Gagal menyimpan pegawai", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Gagal menyimpan pegawai: ${it.message}", Toast.LENGTH_LONG).show()
                 }
         }
     }

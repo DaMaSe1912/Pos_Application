@@ -181,7 +181,7 @@ class TransaksiActivity : AppCompatActivity() {
             val sdf = SimpleDateFormat("dd MMMM yyyy HH:mm", Locale("id", "ID"))
             val currentDate = sdf.format(Date())
 
-            val trans = Transaksi(transactionId, prod.namaProduk, qty, totalHarga, currentDate)
+            val trans = Transaksi(transactionId, prod.namaProduk ?: "", qty, totalHarga, currentDate)
 
             // Perform batch update to keep database in sync
             val updates = HashMap<String, Any>()

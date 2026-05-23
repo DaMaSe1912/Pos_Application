@@ -40,24 +40,39 @@ class ProdukActivity : AppCompatActivity() {
         fetchProduk()
     }
 
+    // ... (kode lainnya tetap sama)
+
     private fun fetchProduk() {
         databaseRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 produkList.clear()
                 displayList.clear()
+
+                if (!snapshot.exists()) {
+                    Toast.makeText(this@ProdukActivity, "Belum ada data produk", Toast.LENGTH_SHORT).show()
+                    adapter.notifyDataSetChanged()
+                    return
+                }
+
                 for (child in snapshot.children) {
-                    val prod = child.getValue(Produk::class.java)
-                    if (prod != null) {
-                        produkList.add(prod)
-                        val formattedHarga = formatRupiah(prod.harga)
-                        displayList.add("${prod.namaProduk}\nKategori: ${prod.kategori}  |  Harga: $formattedHarga  |  Stok: ${prod.stok}")
+                    try {
+                        val prod = child.getValue(Produk::class.java)
+                        if (prod != null) {
+                            produkList.add(prod)
+                            val formattedHarga = formatRupiah(prod.harga)
+                            // Menggunakan String template untuk tampilan List
+                            displayList.add("${prod.namaProduk}\n${prod.kategori} | Harga: $formattedHarga | Stok: ${prod.stok}")
+                        }
+                    } catch (e: Exception) {
+                        // Ini akan muncul di Logcat jika tipe data di Firebase tidak sesuai dengan Model Produk
+                        android.util.Log.e("FirebaseError", "Gagal konversi data: ${e.message}")
                     }
                 }
                 adapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ProdukActivity, "Gagal mengambil data", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProdukActivity, "Database Error: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
