@@ -18,6 +18,42 @@
             android:name=".kategori.DataKategoriActivity"
             android:exported="false" />
         <activity
+            android:name=".kategori.KategoriActivity"
+            android:exported="false" />
+        <activity
+            android:name=".kategori.TambahKategoriActivity"
+            android:exported="false" />
+        <activity
+            android:name=".produk.ProdukActivity"
+            android:exported="false" />
+        <activity
+            android:name=".produk.TambahProdukActivity"
+            android:exported="false" />
+        <activity
+            android:name=".transaksi.TransaksiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".laporan.LaporanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".akun.AkunActivity"
+            android:exported="false" />
+        <activity
+            android:name=".pegawai.PegawaiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".pegawai.TambahPegawaiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".cabang.CabangActivity"
+            android:exported="false" />
+        <activity
+            android:name=".cabang.TambahCabangActivity"
+            android:exported="false" />
+        <activity
+            android:name=".printer.PrinterActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
