@@ -37,23 +37,53 @@ class PrinterActivity : AppCompatActivity() {
         val date = intent.getStringExtra("DATE")
 
         if (transId != null && prodName != null) {
-            tvEmptyMessage.visibility = View.GONE
-            layoutReceiptContent.visibility = View.VISIBLE
-
-            tvNotaDate.text = date
-            tvNotaID.text = transId
-            tvNotaProductName.text = prodName
-            tvNotaQtyPrice.text = "$qty x ${formatRupiah(priceUnit)}"
-            tvNotaItemSubtotal.text = formatRupiah(priceTotal)
-            tvNotaTotal.text = formatRupiah(priceTotal)
+            displayReceipt(transId, prodName, qty, priceUnit, priceTotal, date)
         } else {
-            tvEmptyMessage.visibility = View.VISIBLE
-            layoutReceiptContent.visibility = View.GONE
+            // Fetch the latest transaction from Firebase
+            fetchLatestTransaction()
         }
 
         btnSelesai.setOnClickListener {
             finish()
         }
+    }
+
+    private fun fetchLatestTransaction() {
+        val transaksiRef = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("transaksi")
+        transaksiRef.orderByKey().limitToLast(1).addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                if (snapshot.exists()) {
+                    for (child in snapshot.children) {
+                        val trans = child.getValue(com.damay.secondaplication.transaksi.Transaksi::class.java)
+                        if (trans != null) {
+                            val unitPrice = if (trans.jumlah > 0) trans.hargaTotal / trans.jumlah else 0.0
+                            displayReceipt(trans.id, trans.namaProduk, trans.jumlah, unitPrice, trans.hargaTotal, trans.tanggal)
+                        }
+                    }
+                } else {
+                    tvEmptyMessage.visibility = View.VISIBLE
+                    layoutReceiptContent.visibility = View.GONE
+                }
+            }
+
+            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                tvEmptyMessage.visibility = View.VISIBLE
+                tvEmptyMessage.text = "Gagal mengambil data: ${error.message}"
+                layoutReceiptContent.visibility = View.GONE
+            }
+        })
+    }
+
+    private fun displayReceipt(transId: String, prodName: String, qty: Int, priceUnit: Double, priceTotal: Double, date: String?) {
+        tvEmptyMessage.visibility = View.GONE
+        layoutReceiptContent.visibility = View.VISIBLE
+
+        tvNotaDate.text = date ?: ""
+        tvNotaID.text = transId
+        tvNotaProductName.text = prodName
+        tvNotaQtyPrice.text = "$qty x ${formatRupiah(priceUnit)}"
+        tvNotaItemSubtotal.text = formatRupiah(priceTotal)
+        tvNotaTotal.text = formatRupiah(priceTotal)
     }
 
     private fun initViews() {
