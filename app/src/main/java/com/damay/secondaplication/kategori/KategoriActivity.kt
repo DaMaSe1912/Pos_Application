@@ -1,14 +1,15 @@
 package com.damay.secondaplication.kategori
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.damay.secondaplication.R
 import com.google.firebase.database.*
 
@@ -19,8 +20,7 @@ class KategoriActivity : AppCompatActivity() {
     private lateinit var databaseRef: DatabaseReference
     
     private val categoriesList = ArrayList<KategoriModel>()
-    private val displayList = ArrayList<String>()
-    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var listAdapter: KategoriAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,16 +30,11 @@ class KategoriActivity : AppCompatActivity() {
         btnTambah = findViewById(R.id.btnTambahKategori)
         databaseRef = FirebaseDatabase.getInstance().getReference("kategori")
 
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, displayList)
-        listView.adapter = adapter
+        listAdapter = KategoriAdapter(this, categoriesList)
+        listView.adapter = listAdapter
 
         btnTambah.setOnClickListener {
             startActivity(Intent(this, TambahKategoriActivity::class.java))
-        }
-
-        listView.setOnItemClickListener { _, _, position, _ ->
-            val selectedKategori = categoriesList[position]
-            showEditDialog(selectedKategori)
         }
 
         fetchCategories()
@@ -49,15 +44,13 @@ class KategoriActivity : AppCompatActivity() {
         databaseRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 categoriesList.clear()
-                displayList.clear()
                 for (child in snapshot.children) {
                     val kategori = child.getValue(KategoriModel::class.java)
                     if (kategori != null) {
                         categoriesList.add(kategori)
-                        displayList.add(kategori.namaKategori)
                     }
                 }
-                adapter.notifyDataSetChanged()
+                listAdapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -66,37 +59,77 @@ class KategoriActivity : AppCompatActivity() {
         })
     }
 
-    private fun showEditDialog(kategori: KategoriModel) {
-        val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle("Ubah Nama Kategori")
-        
-        val input = EditText(this)
-        input.setText(kategori.namaKategori)
-        input.setSelection(kategori.namaKategori.length)
-        dialogBuilder.setView(input)
+    // Custom Adapter
+    private class KategoriAdapter(
+        private val context: Context,
+        private val list: ArrayList<KategoriModel>
+    ) : BaseAdapter() {
 
-        dialogBuilder.setPositiveButton("Simpan") { dialog, _ ->
-            val newName = input.text.toString().trim()
-            if (newName.isNotEmpty()) {
-                val updatedKategori = KategoriModel(kategori.id, newName)
-                databaseRef.child(kategori.id).setValue(updatedKategori)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Kategori berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
-                    }
+        override fun getCount(): Int = list.size
+        override fun getItem(position: Int): Any = list[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_kategori, parent, false)
+            val kategori = list[position]
+
+            val tvNama = view.findViewById<TextView>(R.id.tvNamaKategoriItem)
+            val switchStatus = view.findViewById<SwitchCompat>(R.id.switchStatusKategori)
+            val btnEdit = view.findViewById<ImageButton>(R.id.btnEditKategori)
+
+            tvNama.text = kategori.namaKategori
+
+            switchStatus.setOnCheckedChangeListener(null)
+            switchStatus.isChecked = kategori.statusAktif
+
+            switchStatus.setOnCheckedChangeListener { _, isChecked ->
+                val updatedKategori = KategoriModel(kategori.id, kategori.namaKategori, isChecked)
+                FirebaseDatabase.getInstance().getReference("kategori").child(kategori.id).setValue(updatedKategori)
                     .addOnFailureListener {
-                        Toast.makeText(this, "Gagal memperbarui kategori", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Gagal mengubah status: ${it.message}", Toast.LENGTH_SHORT).show()
+                        switchStatus.isChecked = !isChecked // revert
                     }
-            } else {
-                Toast.makeText(this, "Nama kategori tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
+
+            btnEdit.setOnClickListener {
+                showEditDialog(kategori)
+            }
+
+            return view
         }
 
-        dialogBuilder.setNegativeButton("Batal") { dialog, _ ->
-            dialog.cancel()
-        }
+        private fun showEditDialog(kategori: KategoriModel) {
+            val dialogBuilder = AlertDialog.Builder(context)
+            dialogBuilder.setTitle("Ubah Nama Kategori")
+            
+            val input = EditText(context)
+            input.setText(kategori.namaKategori)
+            input.setSelection(kategori.namaKategori.length)
+            dialogBuilder.setView(input)
 
-        val alertDialog = dialogBuilder.create()
-        alertDialog.show()
+            dialogBuilder.setPositiveButton("Simpan") { dialog, _ ->
+                val newName = input.text.toString().trim()
+                if (newName.isNotEmpty()) {
+                    val updatedKategori = KategoriModel(kategori.id, newName, kategori.statusAktif)
+                    FirebaseDatabase.getInstance().getReference("kategori").child(kategori.id).setValue(updatedKategori)
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Kategori berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                            dialog.dismiss()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Gagal memperbarui kategori", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(context, "Nama kategori tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            dialogBuilder.setNegativeButton("Batal") { dialog, _ ->
+                dialog.cancel()
+            }
+
+            val alertDialog = dialogBuilder.create()
+            alertDialog.show()
+        }
     }
 }
