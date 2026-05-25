@@ -76,6 +76,7 @@ class KategoriActivity : AppCompatActivity() {
             val tvNama = view.findViewById<TextView>(R.id.tvNamaKategoriItem)
             val switchStatus = view.findViewById<SwitchCompat>(R.id.switchStatusKategori)
             val btnEdit = view.findViewById<ImageButton>(R.id.btnEditKategori)
+            val btnHapus = view.findViewById<ImageButton>(R.id.btnHapusKategori)
 
             tvNama.text = kategori.namaKategori
 
@@ -95,7 +96,46 @@ class KategoriActivity : AppCompatActivity() {
                 showEditDialog(kategori)
             }
 
+            btnHapus.setOnClickListener {
+                showDeleteConfirmation(kategori)
+            }
+
             return view
+        }
+
+        private fun showDeleteConfirmation(kategori: KategoriModel) {
+            AlertDialog.Builder(context)
+                .setTitle("Hapus Kategori")
+                .setMessage("Apakah Anda yakin ingin menghapus kategori '${kategori.namaKategori}'? Peringatan: Semua produk dalam kategori ini juga akan terhapus!")
+                .setPositiveButton("Hapus") { dialog, _ ->
+                    val database = FirebaseDatabase.getInstance()
+                    
+                    // 1. Hapus Kategori
+                    database.getReference("kategori").child(kategori.id).removeValue()
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Kategori berhasil dihapus", Toast.LENGTH_SHORT).show()
+                            
+                            // 2. Hapus Produk Terkait (Cascading Delete)
+                            val produkRef = database.getReference("produk")
+                            produkRef.orderByChild("kategori").equalTo(kategori.namaKategori)
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (child in snapshot.children) {
+                                            child.ref.removeValue()
+                                        }
+                                    }
+                                    override fun onCancelled(error: DatabaseError) {
+                                        Toast.makeText(context, "Gagal menghapus produk terkait", Toast.LENGTH_SHORT).show()
+                                    }
+                                })
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Gagal menghapus kategori", Toast.LENGTH_SHORT).show()
+                        }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Batal") { dialog, _ -> dialog.dismiss() }
+                .show()
         }
 
         private fun showEditDialog(kategori: KategoriModel) {
