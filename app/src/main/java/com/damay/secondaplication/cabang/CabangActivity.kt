@@ -119,7 +119,15 @@ class CabangActivity : AppCompatActivity() {
         }
 
         private fun showPegawaiDialog(cabang: Cabang) {
-            val filteredPegawai = pegawaiList.filter { it.cabang == cabang.namaCabang }
+            val jabatanPriority = mapOf(
+                "Kepala Cabang" to 1,
+                "Kasir" to 2,
+                "Office Boy" to 3
+            )
+
+            val filteredPegawai = pegawaiList
+                .filter { it.cabang == cabang.namaCabang }
+                .sortedBy { jabatanPriority[it.jabatan] ?: 4 }
 
             val message = java.lang.StringBuilder()
             if (filteredPegawai.isEmpty()) {
@@ -127,7 +135,7 @@ class CabangActivity : AppCompatActivity() {
             } else {
                 message.append("Daftar Pegawai Aktif:\n\n")
                 filteredPegawai.forEachIndexed { index, peg ->
-                    message.append("${index + 1}. ${peg.nama}\n   Email: ${peg.email}\n   Telp: ${peg.telepon}\n\n")
+                    message.append("${index + 1}. ${peg.nama}\n   Jabatan: ${peg.jabatan.ifEmpty { "-" }}\n   Email: ${peg.email}\n   Telp: ${peg.telepon}\n\n")
                 }
             }
 
