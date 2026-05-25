@@ -27,17 +27,53 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nama Pegawai"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="?android:textColorPrimary"/>
 
             <TextView
-                android:id="@+id/tvDetailPegawai"
+                android:id="@+id/tvEmailPegawai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Email: data email"
+                android:textSize="14sp"
+                android:textColor="?android:textColorSecondary"/>
+
+            <TextView
+                android:id="@+id/tvTeleponPegawai"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Email • No Telepon • Cabang"
-                android:textSize="13sp"
+                android:text="Telepon: data telepon"
+                android:textSize="14sp"
+                android:textColor="?android:textColorSecondary"/>
+                
+            <TextView
+                android:id="@+id/tvGenderPegawai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Gender: data gender"
+                android:textSize="14sp"
+                android:textColor="?android:textColorSecondary"/>
+                
+            <TextView
+                android:id="@+id/tvCabangPegawai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Cabang: data cabang"
+                android:textSize="14sp"
+                android:textColor="?android:textColorSecondary"/>
+                
+            <TextView
+                android:id="@+id/tvJabatanPegawai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Jabatan: data jabatan"
+                android:textSize="14sp"
                 android:textColor="?android:textColorSecondary"/>
         </LinearLayout>
 
