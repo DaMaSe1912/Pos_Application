@@ -4,7 +4,7 @@
     <color name="white">#FFFFFFFF</color>
     
     <!-- Premium Colors for Light Theme -->
-    <color name="primary_light">#6750A4</color>
+    <color name="primary_light">#8578A8</color>
     <color name="primary_container_light">#EADDFF</color>
     <color name="background_light">#F6F3F8</color>
     <color name="surface_light">#FFFFFF</color>
@@ -13,7 +13,7 @@
 
     <!-- Premium Colors for Dark Theme -->
     <color name="primary_dark">#D0BCFF</color>
-    <color name="primary_container_dark">#414149</color>
+    <color name="primary_container_dark">#5E5E61</color>
     <color name="background_dark">#121212</color>
     <color name="surface_dark">#1D1B20</color>
     <color name="text_primary_dark">#E6E1E5</color>
