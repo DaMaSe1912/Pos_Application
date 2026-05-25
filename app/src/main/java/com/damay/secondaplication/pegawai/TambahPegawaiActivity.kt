@@ -17,6 +17,8 @@ class TambahPegawaiActivity : AppCompatActivity() {
     private lateinit var etEmail: TextInputEditText
     private lateinit var etTelepon: TextInputEditText
     private lateinit var spCabang: Spinner
+    private lateinit var spGender: Spinner
+    private lateinit var spJabatan: Spinner
     private lateinit var btnSimpan: Button
 
     private lateinit var databaseRef: DatabaseReference
@@ -33,6 +35,8 @@ class TambahPegawaiActivity : AppCompatActivity() {
         etEmail = findViewById(R.id.etEmailPegawai)
         etTelepon = findViewById(R.id.etTeleponPegawai)
         spCabang = findViewById(R.id.spCabangPegawai)
+        spGender = findViewById(R.id.spGenderPegawai)
+        spJabatan = findViewById(R.id.spJabatanPegawai)
         btnSimpan = findViewById(R.id.btnSimpanPegawai)
 
         databaseRef = FirebaseDatabase.getInstance().getReference("pegawai")
@@ -41,6 +45,16 @@ class TambahPegawaiActivity : AppCompatActivity() {
         spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, cabangList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spCabang.adapter = spinnerAdapter
+        
+        val genderOptions = arrayOf("Laki-laki", "Perempuan")
+        val genderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderOptions)
+        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spGender.adapter = genderAdapter
+        
+        val jabatanOptions = arrayOf("Kepala Cabang", "Kasir", "Office Boy")
+        val jabatanAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, jabatanOptions)
+        jabatanAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spJabatan.adapter = jabatanAdapter
 
         btnSimpan.setOnClickListener {
             simpanPegawai()
@@ -73,7 +87,9 @@ class TambahPegawaiActivity : AppCompatActivity() {
         val nama = etNama.text.toString().trim()
         val email = etEmail.text.toString().trim()
         val telp = etTelepon.text.toString().trim()
-        val cabang = spCabang.selectedItem.toString()
+        val cabang = spCabang.selectedItem?.toString() ?: ""
+        val gender = spGender.selectedItem?.toString() ?: ""
+        val jabatan = spJabatan.selectedItem?.toString() ?: ""
 
         if (nama.isEmpty()) {
             etNama.error = "Nama pegawai tidak boleh kosong"
@@ -90,14 +106,14 @@ class TambahPegawaiActivity : AppCompatActivity() {
             return
         }
 
-        if (cabang == "Pilih Cabang") {
+        if (cabang.isEmpty() || cabang == "Pilih Cabang") {
             Toast.makeText(this, "Silakan pilih penempatan cabang pegawai", Toast.LENGTH_SHORT).show()
             return
         }
 
         val id = databaseRef.push().key
         if (id != null) {
-            val pegawai = Pegawai(id, nama, email, telp, cabang)
+            val pegawai = Pegawai(id, nama, email, telp, cabang, gender, jabatan)
             databaseRef.child(id).setValue(pegawai)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Pegawai berhasil disimpan", Toast.LENGTH_SHORT).show()
