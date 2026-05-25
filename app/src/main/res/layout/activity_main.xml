@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView android:fitsSystemWindows="true" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -19,25 +19,39 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="16dp">
 
-            <!-- Greeting -->
-            <TextView
-                android:id="@+id/tvGreeting"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Selamat Siang"
-                android:textStyle="bold"
-                android:textSize="22sp"
-                android:textColor="?android:textColorPrimary"/>
+                android:orientation="vertical">
+                <!-- Greeting -->
+                <TextView
+                    android:id="@+id/tvGreeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Selamat Siang"
+                    android:textStyle="bold"
+                    android:textSize="22sp"
+                    android:textColor="?android:textColorPrimary"/>
 
-            <!-- Date -->
-            <TextView
-                android:id="@+id/tvDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="08 Januari 2026"
-                android:textSize="14sp"
-                android:textColor="?android:textColorSecondary"/>
+                <!-- Date -->
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="08 Januari 2026"
+                    android:textSize="14sp"
+                    android:textColor="?android:textColorSecondary"/>
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnLogout"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_lock_power_off"
+                android:contentDescription="Logout"
+                app:tint="?android:textColorPrimary" />
         </LinearLayout>
 
         <!-- Estimate Card -->
@@ -70,14 +84,31 @@
                         android:textStyle="bold"
                         android:textColor="?android:textColorPrimary"/>
 
-                    <TextView
-                        android:id="@+id/tvBalance"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rp 1.000.000"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="?android:textColorPrimary"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        
+                        <TextView
+                            android:id="@+id/tvBalance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rp 1.000.000"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp"
+                            android:textColor="?android:textColorPrimary"/>
+
+                        <ImageButton
+                            android:id="@+id/btnTambahSaldo"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="?android:selectableItemBackgroundBorderless"
+                            android:src="@android:drawable/ic_input_add"
+                            android:contentDescription="Tambah Saldo"
+                            app:tint="?android:textColorPrimary" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <View
