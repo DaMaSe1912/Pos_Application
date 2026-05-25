@@ -24,8 +24,13 @@ class ProdukActivity : AppCompatActivity() {
     private lateinit var databaseRef: DatabaseReference
     private lateinit var kategoriRef: DatabaseReference
     
+    private lateinit var etSearchProduk: EditText
+    private lateinit var btnFilterKategori: ImageButton
+    
     private val produkList = ArrayList<Produk>()
+    private val filteredProdukList = ArrayList<Produk>()
     val kategoriList = ArrayList<String>()
+    private val selectedKategoriFilter = mutableSetOf<String>()
     private lateinit var listAdapter: ProdukAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,15 +39,26 @@ class ProdukActivity : AppCompatActivity() {
 
         listView = findViewById(R.id.listViewProduk)
         btnTambah = findViewById(R.id.btnTambahProduk)
+        etSearchProduk = findViewById(R.id.etSearchProduk)
+        btnFilterKategori = findViewById(R.id.btnFilterKategori)
+        
         databaseRef = FirebaseDatabase.getInstance().getReference("produk")
         kategoriRef = FirebaseDatabase.getInstance().getReference("kategori")
 
-        listAdapter = ProdukAdapter(this, produkList)
+        listAdapter = ProdukAdapter(this, filteredProdukList)
         listView.adapter = listAdapter
 
         btnTambah.setOnClickListener {
             startActivity(Intent(this, TambahProdukActivity::class.java))
         }
+
+        etSearchProduk.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) { filterData() }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        btnFilterKategori.setOnClickListener { showFilterDialog() }
 
         fetchProduk()
         fetchKategoriList()
@@ -69,7 +85,7 @@ class ProdukActivity : AppCompatActivity() {
                         android.util.Log.e("FirebaseError", "Gagal konversi data: ${e.message}")
                     }
                 }
-                listAdapter.notifyDataSetChanged()
+                filterData()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -78,11 +94,23 @@ class ProdukActivity : AppCompatActivity() {
         })
     }
 
+    private fun filterData() {
+        val query = etSearchProduk.text.toString().trim().lowercase(Locale.getDefault())
+        filteredProdukList.clear()
+        for (produk in produkList) {
+            val matchesQuery = produk.namaProduk!!.lowercase(Locale.getDefault()).contains(query)
+            val matchesCategory = selectedKategoriFilter.isEmpty() || selectedKategoriFilter.contains(produk.kategori)
+            if (matchesQuery && matchesCategory) {
+                filteredProdukList.add(produk)
+            }
+        }
+        listAdapter.notifyDataSetChanged()
+    }
+
     private fun fetchKategoriList() {
         kategoriRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 kategoriList.clear()
-                kategoriList.add("Pilih Kategori")
                 for (child in snapshot.children) {
                     val kat = child.getValue(KategoriModel::class.java)
                     if (kat != null) {
@@ -92,6 +120,36 @@ class ProdukActivity : AppCompatActivity() {
             }
             override fun onCancelled(error: DatabaseError) {}
         })
+    }
+
+    private fun showFilterDialog() {
+        if (kategoriList.isEmpty()) {
+            Toast.makeText(this, "Tidak ada kategori untuk difilter", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val items = kategoriList.toTypedArray()
+        val checkedItems = BooleanArray(items.size) { i -> selectedKategoriFilter.contains(items[i]) }
+
+        AlertDialog.Builder(this)
+            .setTitle("Filter Kategori")
+            .setMultiChoiceItems(items, checkedItems) { _, which, isChecked ->
+                if (isChecked) {
+                    selectedKategoriFilter.add(items[which])
+                } else {
+                    selectedKategoriFilter.remove(items[which])
+                }
+            }
+            .setPositiveButton("Terapkan") { dialog, _ ->
+                filterData()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Reset") { dialog, _ ->
+                selectedKategoriFilter.clear()
+                filterData()
+                dialog.dismiss()
+            }
+            .show()
     }
 
     // Custom Adapter
@@ -180,11 +238,15 @@ class ProdukActivity : AppCompatActivity() {
             etStok.setText(produk.stok.toString())
 
             val activity = context as ProdukActivity
-            val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, activity.kategoriList)
+            val spinnerList = ArrayList<String>()
+            spinnerList.add("Pilih Kategori")
+            spinnerList.addAll(activity.kategoriList)
+            
+            val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, spinnerList)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spKategori.adapter = spinnerAdapter
 
-            val index = activity.kategoriList.indexOf(produk.kategori)
+            val index = spinnerList.indexOf(produk.kategori)
             if (index >= 0) {
                 spKategori.setSelection(index)
             }
