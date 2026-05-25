@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvGreeting: TextView
     private lateinit var tvDate: TextView
     private lateinit var tvBalance: TextView
+    private lateinit var btnLogout: android.widget.ImageButton
+    private lateinit var btnTambahSaldo: android.widget.ImageButton
 
     private lateinit var btnTransaksi: LinearLayout
     private lateinit var btnLaporan: LinearLayout
@@ -59,6 +61,8 @@ class MainActivity : AppCompatActivity() {
         tvGreeting = findViewById(R.id.tvGreeting)
         tvDate = findViewById(R.id.tvDate)
         tvBalance = findViewById(R.id.tvBalance)
+        btnLogout = findViewById(R.id.btnLogout)
+        btnTambahSaldo = findViewById(R.id.btnTambahSaldo)
 
         btnTransaksi = findViewById(R.id.btnTransaksi)
         btnLaporan = findViewById(R.id.btnLaporan)
@@ -109,6 +113,55 @@ class MainActivity : AppCompatActivity() {
             // By default opens printer activity showing instructions/no recent receipt
             startActivity(Intent(this, PrinterActivity::class.java))
         }
+
+        btnLogout.setOnClickListener {
+            val sharedPreferences = getSharedPreferences("LoginPrefs", android.content.Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.putBoolean("isLoggedIn", false)
+            editor.apply()
+            
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        btnTambahSaldo.setOnClickListener {
+            showTambahSaldoDialog()
+        }
+    }
+
+    private fun showTambahSaldoDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Tambah Saldo")
+
+        val input = com.google.android.material.textfield.TextInputEditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+        input.hint = "Nominal Saldo (Rp)"
+        
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        container.setPadding(48, 16, 48, 16)
+        container.addView(input)
+        
+        builder.setView(container)
+
+        builder.setPositiveButton("Tambah") { dialog, _ ->
+            val amountStr = input.text.toString().trim()
+            if (amountStr.isNotEmpty()) {
+                val amount = amountStr.toDoubleOrNull()
+                if (amount != null) {
+                    keuanganRef.child("saldo").get().addOnSuccessListener { snapshot ->
+                        val currentSaldo = if (snapshot.exists()) snapshot.getValue(Double::class.java) ?: 0.0 else 0.0
+                        keuanganRef.child("saldo").setValue(currentSaldo + amount)
+                        android.widget.Toast.makeText(this, "Saldo berhasil ditambahkan", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Batal") { dialog, _ -> dialog.cancel() }
+        builder.show()
     }
 
     private fun displayDate() {
@@ -122,7 +175,7 @@ class MainActivity : AppCompatActivity() {
         akunRef.child("username").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val username = snapshot.value?.toString() ?: "User"
-                tvGreeting.text = "Selamat Siang, $username"
+                tvGreeting.text = "${getGreetingTime()}, $username"
             }
             override fun onCancelled(error: DatabaseError) {}
         })
@@ -148,5 +201,17 @@ class MainActivity : AppCompatActivity() {
         val numberFormat = NumberFormat.getCurrencyInstance(localeID)
         numberFormat.maximumFractionDigits = 0
         return numberFormat.format(number).replace("Rp", "Rp ")
+    }
+
+    private fun getGreetingTime(): String {
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        
+        return when (hour) {
+            in 0..8 -> "Selamat Pagi"
+            in 9..14 -> "Selamat Siang"
+            in 15..17 -> "Selamat Sore"
+            else -> "Selamat Malam"
+        }
     }
 }
