@@ -21,8 +21,11 @@ class PegawaiActivity : AppCompatActivity() {
     private lateinit var databaseRef: DatabaseReference
     private lateinit var cabangRef: DatabaseReference
 
+    private lateinit var spFilterCabang: Spinner
+
     private val pegawaiList = ArrayList<Pegawai>()
-    private val cabangList = ArrayList<String>()
+    private val filteredPegawaiList = ArrayList<Pegawai>()
+    val cabangList = ArrayList<String>()
     private lateinit var listAdapter: PegawaiAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,12 +34,24 @@ class PegawaiActivity : AppCompatActivity() {
 
         listView = findViewById(R.id.listViewPegawai)
         btnTambah = findViewById(R.id.btnTambahPegawai)
+        spFilterCabang = findViewById(R.id.spFilterCabang)
 
         databaseRef = FirebaseDatabase.getInstance().getReference("pegawai")
         cabangRef = FirebaseDatabase.getInstance().getReference("cabang")
 
-        listAdapter = PegawaiAdapter(this, pegawaiList)
+        listAdapter = PegawaiAdapter(this, filteredPegawaiList)
         listView.adapter = listAdapter
+
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, cabangList)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spFilterCabang.adapter = spinnerAdapter
+
+        spFilterCabang.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                filterPegawai()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         btnTambah.setOnClickListener {
             startActivity(Intent(this, TambahPegawaiActivity::class.java))
@@ -56,7 +71,7 @@ class PegawaiActivity : AppCompatActivity() {
                         pegawaiList.add(peg)
                     }
                 }
-                listAdapter.notifyDataSetChanged()
+                filterPegawai()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -69,17 +84,34 @@ class PegawaiActivity : AppCompatActivity() {
         cabangRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 cabangList.clear()
-                cabangList.add("Pilih Cabang")
+                cabangList.add("Semua Cabang")
                 for (child in snapshot.children) {
                     val cab = child.getValue(Cabang::class.java)
                     if (cab != null) {
                         cabangList.add(cab.namaCabang)
                     }
                 }
+                (spFilterCabang.adapter as? ArrayAdapter<*>)?.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {}
         })
+    }
+
+    private fun filterPegawai() {
+        val selectedCabang = spFilterCabang.selectedItem?.toString() ?: "Semua Cabang"
+        filteredPegawaiList.clear()
+        
+        if (selectedCabang == "Semua Cabang") {
+            filteredPegawaiList.addAll(pegawaiList)
+        } else {
+            for (pegawai in pegawaiList) {
+                if (pegawai.cabang == selectedCabang) {
+                    filteredPegawaiList.add(pegawai)
+                }
+            }
+        }
+        listAdapter.notifyDataSetChanged()
     }
 
     // Custom Adapter class inside PegawaiActivity for employee items
@@ -97,12 +129,21 @@ class PegawaiActivity : AppCompatActivity() {
             val pegawai = list[position]
 
             val tvNama = view.findViewById<TextView>(R.id.tvNamaPegawai)
-            val tvDetail = view.findViewById<TextView>(R.id.tvDetailPegawai)
+            val tvEmail = view.findViewById<TextView>(R.id.tvEmailPegawai)
+            val tvTelepon = view.findViewById<TextView>(R.id.tvTeleponPegawai)
+            val tvGender = view.findViewById<TextView>(R.id.tvGenderPegawai)
+            val tvCabang = view.findViewById<TextView>(R.id.tvCabangPegawai)
+            val tvJabatan = view.findViewById<TextView>(R.id.tvJabatanPegawai)
+
             val btnEdit = view.findViewById<ImageButton>(R.id.btnEditPegawai)
             val btnHapus = view.findViewById<ImageButton>(R.id.btnHapusPegawai)
 
             tvNama.text = pegawai.nama
-            tvDetail.text = "${pegawai.email}  |  ${pegawai.telepon}\nCabang: ${pegawai.cabang}"
+            tvEmail.text = "Email: ${pegawai.email}"
+            tvTelepon.text = "Telepon: ${pegawai.telepon}"
+            tvGender.text = "Gender: ${pegawai.gender}"
+            tvCabang.text = "Cabang: ${pegawai.cabang}"
+            tvJabatan.text = "Jabatan: ${pegawai.jabatan}"
 
             btnHapus.setOnClickListener {
                 showDeleteConfirmation(pegawai)
@@ -145,6 +186,9 @@ class PegawaiActivity : AppCompatActivity() {
             val etTelepon = dialogView.findViewById<TextInputEditText>(R.id.dialogEtTelepon)
             val spCabang = dialogView.findViewById<Spinner>(R.id.dialogSpCabang)
 
+            // Since dialog layout may not have Gender/Jabatan yet, we check for nulls or assume we shouldn't update them here unless we edit dialog layout too.
+            // But we must preserve existing gender and jabatan.
+            
             // Prefill current data
             etNama.setText(pegawai.nama)
             etEmail.setText(pegawai.email)
@@ -152,12 +196,15 @@ class PegawaiActivity : AppCompatActivity() {
 
             // Setup Cabang spinner options
             val activity = context as PegawaiActivity
-            val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, activity.cabangList)
+            val spinnerList = ArrayList<String>()
+            spinnerList.add("Pilih Cabang")
+            spinnerList.addAll(activity.cabangList.filter { it != "Semua Cabang" })
+            val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, spinnerList)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spCabang.adapter = spinnerAdapter
 
             // Select active branch if match found
-            val index = activity.cabangList.indexOf(pegawai.cabang)
+            val index = spinnerList.indexOf(pegawai.cabang)
             if (index >= 0) {
                 spCabang.setSelection(index)
             }
@@ -173,7 +220,7 @@ class PegawaiActivity : AppCompatActivity() {
                     return@setPositiveButton
                 }
 
-                val updatedPegawai = Pegawai(pegawai.id, newNama, newEmail, newTelp, newCabang)
+                val updatedPegawai = Pegawai(pegawai.id, newNama, newEmail, newTelp, newCabang, pegawai.gender, pegawai.jabatan)
                 FirebaseDatabase.getInstance().getReference("pegawai").child(pegawai.id).setValue(updatedPegawai)
                     .addOnSuccessListener {
                         Toast.makeText(context, "Data pegawai berhasil diperbarui", Toast.LENGTH_SHORT).show()

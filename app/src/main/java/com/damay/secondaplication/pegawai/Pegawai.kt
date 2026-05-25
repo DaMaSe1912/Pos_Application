@@ -5,5 +5,7 @@ data class Pegawai(
     val nama: String = "",
     val email: String = "",
     val telepon: String = "",
-    val cabang: String = ""
+    val cabang: String = "",
+    val gender: String = "",
+    val jabatan: String = ""
 )
