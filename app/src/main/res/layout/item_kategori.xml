@@ -57,6 +57,16 @@
                 android:contentDescription="Edit Kategori"
                 app:tint="?colorPrimary"/>
 
+            <!-- Delete Button -->
+            <ImageButton
+                android:id="@+id/btnHapusKategori"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_delete"
+                android:contentDescription="Hapus Kategori"
+                app:tint="@android:color/holo_red_dark"/>
+
         </LinearLayout>
 
     </LinearLayout>
