@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.database.*
 
 class LoginActivity : AppCompatActivity() {
 
@@ -44,19 +45,48 @@ class LoginActivity : AppCompatActivity() {
             val username = etUsername.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
-            if (username.isNotEmpty() && password.isNotEmpty()) {
-                // Dummy login success
-                val editor = sharedPreferences.edit()
-                editor.putBoolean("isLoggedIn", true)
-                editor.putString("username", username)
-                editor.apply()
-
-                Toast.makeText(this, "Login Berhasil", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
-            } else {
+            if (username.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Silakan masukkan username dan password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            btnLogin.isEnabled = false
+
+            val databaseRef = FirebaseDatabase.getInstance().getReference("akun")
+            databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    btnLogin.isEnabled = true
+                    
+                    var usernameDb = snapshot.child("username").value?.toString()
+                    var passwordDb = snapshot.child("password").value?.toString()
+                    
+                    if (usernameDb == null || passwordDb == null) {
+                        usernameDb = "damay.admin"
+                        passwordDb = "password"
+                        databaseRef.child("username").setValue(usernameDb)
+                        databaseRef.child("password").setValue(passwordDb)
+                    }
+
+                    if (username == usernameDb && password == passwordDb) {
+                        val editor = sharedPreferences.edit()
+                        editor.putBoolean("isLoggedIn", true)
+                        editor.putString("username", username)
+                        editor.apply()
+
+                        Toast.makeText(this@LoginActivity, "Login Berhasil", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this@LoginActivity, "Username atau password salah", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    btnLogin.isEnabled = true
+                    Toast.makeText(this@LoginActivity, "Error Database: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
         }
     }
 }
+
