@@ -86,6 +86,21 @@ class KategoriActivity : AppCompatActivity() {
             switchStatus.setOnCheckedChangeListener { _, isChecked ->
                 val updatedKategori = KategoriModel(kategori.id, kategori.namaKategori, isChecked)
                 FirebaseDatabase.getInstance().getReference("kategori").child(kategori.id).setValue(updatedKategori)
+                    .addOnSuccessListener {
+                        if (!isChecked) {
+                            val database = FirebaseDatabase.getInstance()
+                            val produkRef = database.getReference("produk")
+                            produkRef.orderByChild("kategori").equalTo(kategori.namaKategori)
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (child in snapshot.children) {
+                                            child.ref.child("statusAktif").setValue(false)
+                                        }
+                                    }
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
+                    }
                     .addOnFailureListener {
                         Toast.makeText(context, "Gagal mengubah status: ${it.message}", Toast.LENGTH_SHORT).show()
                         switchStatus.isChecked = !isChecked // revert

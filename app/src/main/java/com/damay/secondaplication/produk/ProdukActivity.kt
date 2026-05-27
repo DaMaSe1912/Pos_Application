@@ -182,6 +182,58 @@ class ProdukActivity : AppCompatActivity() {
             switchStatus.setOnCheckedChangeListener { _, isChecked ->
                 val updatedProduk = Produk(produk.id, produk.namaProduk, produk.kategori, produk.harga, produk.stok, isChecked)
                 FirebaseDatabase.getInstance().getReference("produk").child(produk.id ?: "").setValue(updatedProduk)
+                    .addOnSuccessListener {
+                        val categoryName = produk.kategori ?: ""
+                        if (categoryName.isNotEmpty()) {
+                            val database = FirebaseDatabase.getInstance()
+                            val kategoriRef = database.getReference("kategori")
+                            val produkRef = database.getReference("produk")
+                            
+                            if (isChecked) {
+                                // If a product is activated, activate its category!
+                                kategoriRef.orderByChild("namaKategori").equalTo(categoryName)
+                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onDataChange(kSnapshot: DataSnapshot) {
+                                            for (kChild in kSnapshot.children) {
+                                                val kat = kChild.getValue(KategoriModel::class.java)
+                                                if (kat != null && !kat.statusAktif) {
+                                                    kChild.ref.child("statusAktif").setValue(true)
+                                                }
+                                            }
+                                        }
+                                        override fun onCancelled(error: DatabaseError) {}
+                                    })
+                            } else {
+                                // If a product is deactivated, check if ALL products in the same category are deactivated.
+                                // If so, deactivate the category!
+                                produkRef.orderByChild("kategori").equalTo(categoryName)
+                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onDataChange(pSnapshot: DataSnapshot) {
+                                            var allDeactivated = true
+                                            for (pChild in pSnapshot.children) {
+                                                val prod = pChild.getValue(Produk::class.java)
+                                                if (prod != null && prod.statusAktif) {
+                                                    allDeactivated = false
+                                                    break
+                                                }
+                                            }
+                                            if (allDeactivated) {
+                                                kategoriRef.orderByChild("namaKategori").equalTo(categoryName)
+                                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                                        override fun onDataChange(kSnapshot: DataSnapshot) {
+                                                            for (kChild in kSnapshot.children) {
+                                                                kChild.ref.child("statusAktif").setValue(false)
+                                                            }
+                                                        }
+                                                        override fun onCancelled(error: DatabaseError) {}
+                                                    })
+                                            }
+                                        }
+                                        override fun onCancelled(error: DatabaseError) {}
+                                    })
+                            }
+                        }
+                    }
                     .addOnFailureListener {
                         Toast.makeText(context, "Gagal mengubah status: ${it.message}", Toast.LENGTH_SHORT).show()
                         switchStatus.isChecked = !isChecked // revert
