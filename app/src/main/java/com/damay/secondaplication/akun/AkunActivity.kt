@@ -15,6 +15,7 @@ import com.google.firebase.database.*
 class AkunActivity : AppCompatActivity() {
 
     private lateinit var etUsername: TextInputEditText
+    private lateinit var etPassword: TextInputEditText
     private lateinit var btnSimpan: Button
     private lateinit var rgTheme: RadioGroup
     private lateinit var rbThemeLight: RadioButton
@@ -44,6 +45,7 @@ class AkunActivity : AppCompatActivity() {
 
     private fun initViews() {
         etUsername = findViewById(R.id.etUsername)
+        etPassword = findViewById(R.id.etPassword)
         btnSimpan = findViewById(R.id.btnSimpanAkun)
         rgTheme = findViewById(R.id.rgTheme)
         rbThemeLight = findViewById(R.id.rbThemeLight)
@@ -51,6 +53,7 @@ class AkunActivity : AppCompatActivity() {
         rbThemeSystem = findViewById(R.id.rbThemeSystem)
 
         sharedPreferences = getSharedPreferences("ThemePrefs", MODE_PRIVATE)
+        etUsername.isEnabled = false
     }
 
     private fun setupFirebase() {
@@ -58,24 +61,25 @@ class AkunActivity : AppCompatActivity() {
     }
 
     private fun loadProfileData() {
-        databaseRef.child("username").addListenerForSingleValueEvent(object : ValueEventListener {
+        databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val username = snapshot.value?.toString() ?: "User"
+                val username = snapshot.child("username").value?.toString() ?: "damay.admin"
+                val password = snapshot.child("password").value?.toString() ?: "password"
                 etUsername.setText(username)
-                etUsername.setSelection(username.length)
+                etPassword.setText(password)
             }
             override fun onCancelled(error: DatabaseError) {}
         })
     }
 
     private fun simpanProfile() {
-        val username = etUsername.text.toString().trim()
-        if (username.isEmpty()) {
-            etUsername.error = "Username tidak boleh kosong"
+        val password = etPassword.text.toString().trim()
+        if (password.isEmpty()) {
+            etPassword.error = "Password tidak boleh kosong"
             return
         }
 
-        databaseRef.child("username").setValue(username)
+        databaseRef.child("password").setValue(password)
             .addOnSuccessListener {
                 Toast.makeText(this, "Profil berhasil disimpan", Toast.LENGTH_SHORT).show()
                 finish()
