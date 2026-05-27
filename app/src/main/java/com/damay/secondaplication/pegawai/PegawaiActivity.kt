@@ -186,9 +186,6 @@ class PegawaiActivity : AppCompatActivity() {
             val etTelepon = dialogView.findViewById<TextInputEditText>(R.id.dialogEtTelepon)
             val spCabang = dialogView.findViewById<Spinner>(R.id.dialogSpCabang)
 
-            // Since dialog layout may not have Gender/Jabatan yet, we check for nulls or assume we shouldn't update them here unless we edit dialog layout too.
-            // But we must preserve existing gender and jabatan.
-            
             // Prefill current data
             etNama.setText(pegawai.nama)
             etEmail.setText(pegawai.email)
@@ -197,7 +194,7 @@ class PegawaiActivity : AppCompatActivity() {
             // Setup Cabang spinner options
             val activity = context as PegawaiActivity
             val spinnerList = ArrayList<String>()
-            spinnerList.add("Pilih Cabang")
+            spinnerList.add("belum ditentukan")
             spinnerList.addAll(activity.cabangList.filter { it != "Semua Cabang" })
             val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, spinnerList)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -209,33 +206,50 @@ class PegawaiActivity : AppCompatActivity() {
                 spCabang.setSelection(index)
             }
 
-            dialogBuilder.setPositiveButton("Simpan") { dialog, _ ->
+            dialogBuilder.setPositiveButton("Simpan", null)
+            dialogBuilder.setNegativeButton("Batal") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+            val alertDialog = dialogBuilder.create()
+            alertDialog.show()
+
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val newNama = etNama.text.toString().trim()
                 val newEmail = etEmail.text.toString().trim()
                 val newTelp = etTelepon.text.toString().trim()
                 val newCabang = spCabang.selectedItem.toString()
 
-                if (newNama.isEmpty() || newEmail.isEmpty() || newTelp.isEmpty() || newCabang == "Pilih Cabang") {
-                    Toast.makeText(context, "Semua input harus diisi dengan benar", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+                if (newNama.isEmpty()) {
+                    etNama.error = "Nama pegawai tidak boleh kosong"
+                    return@setOnClickListener
+                }
+
+                if (newEmail.isEmpty()) {
+                    etEmail.error = "Email pegawai tidak boleh kosong"
+                    return@setOnClickListener
+                }
+
+                if (newTelp.isEmpty()) {
+                    etTelepon.error = "Nomor telepon pegawai tidak boleh kosong"
+                    return@setOnClickListener
+                }
+
+                if (newCabang == "belum ditentukan") {
+                    Toast.makeText(context, "Silakan pilih penempatan cabang pegawai", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
 
                 val updatedPegawai = Pegawai(pegawai.id, newNama, newEmail, newTelp, newCabang, pegawai.gender, pegawai.jabatan)
                 FirebaseDatabase.getInstance().getReference("pegawai").child(pegawai.id).setValue(updatedPegawai)
                     .addOnSuccessListener {
                         Toast.makeText(context, "Data pegawai berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
+                        alertDialog.dismiss()
                     }
                     .addOnFailureListener {
                         Toast.makeText(context, "Gagal memperbarui data pegawai", Toast.LENGTH_SHORT).show()
                     }
             }
-
-            dialogBuilder.setNegativeButton("Batal") { dialog, _ ->
-                dialog.dismiss()
-            }
-
-            dialogBuilder.create().show()
         }
     }
 }

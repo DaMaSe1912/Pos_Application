@@ -67,7 +67,7 @@ class TambahPegawaiActivity : AppCompatActivity() {
         cabangRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 cabangList.clear()
-                cabangList.add("Pilih Cabang")
+                cabangList.add("belum ditentukan")
                 for (child in snapshot.children) {
                     val cab = child.getValue(Cabang::class.java)
                     if (cab != null) {
@@ -106,7 +106,7 @@ class TambahPegawaiActivity : AppCompatActivity() {
             return
         }
 
-        if (cabang.isEmpty() || cabang == "Pilih Cabang") {
+        if (cabang.isEmpty() || cabang == "belum ditentukan") {
             Toast.makeText(this, "Silakan pilih penempatan cabang pegawai", Toast.LENGTH_SHORT).show()
             return
         }

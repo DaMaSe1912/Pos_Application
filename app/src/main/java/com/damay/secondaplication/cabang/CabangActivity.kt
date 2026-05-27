@@ -191,8 +191,15 @@ class CabangActivity : AppCompatActivity() {
                 .setTitle("Hapus Cabang")
                 .setMessage("Apakah Anda yakin ingin menghapus cabang ${cabang.namaCabang}?")
                 .setPositiveButton("Hapus") { dialog, _ ->
+                    val namaCabangDihapus = cabang.namaCabang
                     FirebaseDatabase.getInstance().getReference("cabang").child(cabang.id).removeValue()
                         .addOnSuccessListener {
+                            val pegawaiRef = FirebaseDatabase.getInstance().getReference("pegawai")
+                            for (pegawai in pegawaiList) {
+                                if (pegawai.cabang == namaCabangDihapus) {
+                                    pegawaiRef.child(pegawai.id).child("cabang").setValue("belum ditentukan")
+                                }
+                            }
                             Toast.makeText(context, "Cabang berhasil dihapus", Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
