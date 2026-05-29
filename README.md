@@ -2,7 +2,7 @@
 
 ## Login
 <p align="center">
-  <img src="AssetAndroid/Login-Page.jpg" width="30%">
+  <img src="AssetAndroid/Login-page.jpg" width="30%">
 </p>
 
 ## Main
