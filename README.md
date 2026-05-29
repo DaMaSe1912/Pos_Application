@@ -1,31 +1,60 @@
 # POS
 
 ## Login
-![login](AssetAndroid/Login-page.jpg)
+<p align="center">
+  <img src="AssetAndroid/Login-Page.jpg" width="30%">
+</p>
 
 ## Main
-![dashboard](AssetAndroid/dashboard.jpg)
+<p align="center">
+  <img src="AssetAndroid/dashboard.jpg" width="30%">
+</p>
+
 
 ## Transaksi
-![transaksi](AssetAndroid/transaksi.jpg)
+<p align="center">
+  <img src="AssetAndroid/transaksi.jpg" width="30%">
+</p>
+
 
 ## Laporan
-![laporan](AssetAndroid/laporan.jpg)
+<p align="center">
+  <img src="AssetAndroid/laporan.jpg" width="30%">
+</p>
+
 
 ## Akun
-![akun](AssetAndroid/akun.jpg)
+<p align="center">
+  <img src="AssetAndroid/akun.jpg" width="30%">
+</p>
+
 
 ## Produk
-![produk](AssetAndroid/produk.jpg)
+<p align="center">
+  <img src="AssetAndroid/produk.jpg" width="30%">
+</p>
+
 
 ## Kategori
-![kategori](AssetAndroid/kategori.jpg)
+<p align="center">
+  <img src="AssetAndroid/kategori.jpg" width="30%">
+</p>
+
 
 ## Pegawai
-![pegawai](AssetAndroid/pegawai.jpg)
+<p align="center">
+  <img src="AssetAndroid/pegawai.jpg" width="30%">
+</p>
+
 
 ## Cabang
-![cabang](AssetAndroid/cabang.jpg)
+<p align="center">
+  <img src="AssetAndroid/cabang.jpg" width="30%">
+</p>
+
 
 ## Printer
-![printer](AssetAndroid/printer.jpg)
+<p align="center">
+  <img src="AssetAndroid/print.jpg" width="30%">
+</p>
+
